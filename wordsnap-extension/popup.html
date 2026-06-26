@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordSnap</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  width: 320px;
+  min-height: 420px;
+  background: #F0F5FF;
+  color: #1A2B5E;
+}
+
+.header {
+  background: linear-gradient(135deg, #4A7FE8, #6B9BFF);
+  padding: 16px 18px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+.logo span { opacity: 0.8; }
+.header-stats {
+  font-size: 12px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}
+
+.body { padding: 14px; }
+
+.tip {
+  background: rgba(74,127,232,0.1);
+  border: 1px solid #C8D9FF;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #4A5E8A;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.tip strong { color: #4A7FE8; }
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7A8EB8;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.cards-list { display: flex; flex-direction: column; gap: 8px; }
+
+.card-item {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.95);
+  border-radius: 12px;
+  padding: 11px 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.card-word { font-size: 15px; font-weight: 700; color: #1A2B5E; }
+.card-trans { font-size: 12px; color: #4A5E8A; margin-top: 2px; }
+.card-source { font-size: 10px; color: #7A8EB8; margin-top: 3px; }
+
+.card-del {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: #FFE4E4;
+  color: #C0392B;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.card-del:hover { background: #FFBFBF; }
+
+.empty-state {
+  text-align: center;
+  padding: 32px 0 20px;
+  color: #7A8EB8;
+}
+.empty-icon { font-size: 36px; margin-bottom: 10px; }
+.empty-text { font-size: 13px; line-height: 1.6; }
+
+.footer {
+  padding: 12px 14px 14px;
+  display: flex;
+  gap: 8px;
+}
+.btn-study {
+  flex: 1;
+  padding: 10px;
+  background: #4A7FE8;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-study:hover { background: #3a6fd8; }
+.btn-clear {
+  padding: 10px 14px;
+  background: #EEF3FF;
+  color: #4A5E8A;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-clear:hover { background: #D8E6FF; }
+
+/* Study mode */
+.study-mode { display: none; padding: 14px; }
+.study-card {
+  background: rgba(255,255,255,0.9);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid #E0EAFF;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+.study-card:hover { box-shadow: 0 4px 20px rgba(74,127,232,0.12); }
+.study-word { font-size: 28px; font-weight: 700; color: #1A2B5E; margin-bottom: 6px; }
+.study-hint { font-size: 12px; color: #7A8EB8; }
+.study-trans { font-size: 20px; font-weight: 600; color: #4A5E8A; margin-top: 12px; display: none; }
+.study-actions { display: flex; gap: 8px; }
+.btn-knew { flex: 1; padding: 10px; background: #D4F4E2; color: #1A6B40; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-forgot { flex: 1; padding: 10px; background: #FFE4E4; color: #8B1A1A; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.study-progress { font-size: 12px; color: #7A8EB8; text-align: center; margin-bottom: 10px; }
+.back-btn { background: none; border: none; color: #4A7FE8; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0 0 10px; font-family: inherit; }
+</style>
+</head>
+<body>
+
+<div id="main-view">
+  <div class="header">
+    <div class="logo">Word<span>Snap</span></div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="header-stats" id="header-stats">0 карточек</div>
+      <button id="account-btn" style="background:none; border:none; color:white; cursor:pointer; font-size:18px;">👤</button>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="tip">
+      <strong>Выдели слово</strong> на любом сайте — появится пузырь с переводом. Нажми «+ Сохранить карточку».
+    </div>
+
+    <div class="section-title">Последние карточки</div>
+    <div class="cards-list" id="cards-list">
+      <div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <div class="empty-text">Карточек пока нет.<br>Выдели слово на любом сайте!</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="btn-study" id="study-btn">▶ Учить карточки</button>
+    <button class="btn-clear" id="clear-btn">Очистить</button>
+  </div>
+</div>
+<!-- Study Mode -->
+<div class="study-mode" id="study-view">
+  <button class="back-btn" id="back-btn">← Назад</button>
+  <div class="study-progress" id="study-progress"></div>
+  <div class="study-card" id="study-card">
+    <div class="study-word" id="study-word"></div>
+    <div class="study-hint">Нажми чтобы увидеть перевод</div>
+    <div class="study-trans" id="study-trans"></div>
+  </div>
+  <div class="study-actions">
+    <button class="btn-forgot" id="btn-forgot">✗ Не знал</button>
+    <button class="btn-knew" id="btn-knew">✓ Знал</button>
+  </div>
+</div>
+
+<!-- Account View -->
+<div id="account-view" style="display: none; padding: 20px; text-align: center;">
+  <button class="back-btn" id="acc-back-btn">← Назад</button>
+  <div id="user-info" style="margin: 20px 0;">
+    <div class="empty-icon">🔐</div>
+    <p>Войдите, чтобы синхронизировать карточки</p>
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+      <button class="btn-study" id="login-google">Войти через Google</button>
+      <button class="btn-clear" id="login-email">Войти через Email</button>
+    </div>
+  </div>
+  <div id="user-profile" style="display: none; margin: 20px 0;">
+    <div class="empty-icon">✅</div>
+    <p id="user-email"></p>
+    <p style="font-size: 11px; color: #7A8EB8; margin-top: 5px;">Облачная синхронизация активна</p>
+    <button class="btn-clear" id="logout-btn" style="margin-top: 20px; width: 100%;">Выйти</button>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+// UI toggle
+document.getElementById('account-btn').addEventListener('click', () => {
+  document.getElementById('main-view').style.display = 'none';
+  document.getElementById('account-view').style.display = 'block';
+  updateAccountUI();
+});
+
+document.getElementById('acc-back-btn').addEventListener('click', () => {
+  document.getElementById('account-view').style.display = 'none';
+  document.getElementById('main-view').style.display = 'block';
+});
+
+async function updateAccountUI() {
+  const user = await auth.getCurrentUser();
+  const info = document.getElementById('user-info');
+  const profile = document.getElementById('user-profile');
+  
+  if (user) {
+    info.style.display = 'none';
+    profile.style.display = 'block';
+    document.getElementById('user-email').textContent = user.email;
+  } else {
+    info.style.display = 'block';
+    profile.style.display = 'none';
+  }
+}
+
+document.getElementById('login-google').addEventListener('click', async () => {
+  const res = await auth.loginWithGoogle();
+  if (res.success) {
+    auth.user = res.user;
+    updateAccountUI();
+  }
+});
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await auth.logout();
+  updateAccountUI();
+});
+
+// ─── Загружаем карточки ──────────────────────────────────────────
+function loadCards() {
+  chrome.storage.local.get(['cards'], (result) => {
+    const cards = result.cards || [];
+    renderCards(cards);
+  });
+}
+// ... rest of the code ...
+
+function renderCards(cards) {
+  const list = document.getElementById('cards-list');
+  const stats = document.getElementById('header-stats');
+  stats.textContent = `${cards.length} карточек`;
+
+  if (cards.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <div class="empty-text">Карточек пока нет.<br>Выдели слово на любом сайте!</div>
+      </div>
+    `;
+    return;
+  }
+
+  // Показываем последние 5
+  const recent = cards.slice(-5).reverse();
+  list.innerHTML = recent.map(card => `
+    <div class="card-item">
+      <div>
+        <div class="card-word">${escHtml(card.word)}</div>
+        <div class="card-trans">${escHtml(card.translation)}</div>
+        <div class="card-source">с сайта ${escHtml(card.source)}</div>
+      </div>
+      <button class="card-del" data-id="${card.id}" title="Удалить">✕</button>
+    </div>
+  `).join('');
+
+  // Удаление
+  list.querySelectorAll('.card-del').forEach(btn => {
+    btn.addEventListener('click', () => deleteCard(Number(btn.dataset.id)));
+  });
+}
+
+function deleteCard(id) {
+  chrome.storage.local.get(['cards'], (result) => {
+    const cards = (result.cards || []).filter(c => c.id !== id);
+    chrome.storage.local.set({ cards }, loadCards);
+  });
+}
+
+document.getElementById('clear-btn').addEventListener('click', () => {
+  if (confirm('Удалить все карточки?')) {
+    chrome.storage.local.set({ cards: [] }, loadCards);
+  }
+});
+
+// ─── Study Mode ──────────────────────────────────────────────────
+let studyCards = [];
+let studyIndex = 0;
+let revealed = false;
+
+document.getElementById('study-btn').addEventListener('click', () => {
+  chrome.storage.local.get(['cards'], (result) => {
+    const cards = result.cards || [];
+    if (cards.length === 0) return;
+
+    studyCards = shuffle([...cards]);
+    studyIndex = 0;
+    revealed = false;
+
+    document.getElementById('main-view').style.display = 'none';
+    document.getElementById('study-view').style.display = 'block';
+    showStudyCard();
+  });
+});
+
+document.getElementById('back-btn').addEventListener('click', () => {
+  document.getElementById('study-view').style.display = 'none';
+  document.getElementById('main-view').style.display = 'block';
+});
+
+document.getElementById('study-card').addEventListener('click', () => {
+  if (!revealed) {
+    document.getElementById('study-trans').style.display = 'block';
+    document.querySelector('.study-hint').style.display = 'none';
+    revealed = true;
+  }
+});
+
+document.getElementById('btn-knew').addEventListener('click', () => nextCard(true));
+document.getElementById('btn-forgot').addEventListener('click', () => nextCard(false));
+
+function showStudyCard() {
+  if (studyIndex >= studyCards.length) {
+    document.getElementById('study-card').innerHTML = `
+      <div class="study-word">🎉</div>
+      <div class="study-hint">Все карточки пройдены!</div>
+    `;
+    document.querySelector('.study-actions').style.display = 'none';
+    return;
+  }
+
+  const card = studyCards[studyIndex];
+  document.getElementById('study-word').textContent = card.word;
+  document.getElementById('study-trans').textContent = card.translation;
+  document.getElementById('study-trans').style.display = 'none';
+  document.querySelector('.study-hint').style.display = 'block';
+  document.getElementById('study-progress').textContent =
+    `${studyIndex + 1} из ${studyCards.length}`;
+  revealed = false;
+}
+
+function nextCard(knew) {
+  if (!revealed) return; // сначала должен увидеть перевод
+  studyIndex++;
+  showStudyCard();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function escHtml(text) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(text || ''));
+  return d.innerHTML;
+}
+
+// Запуск
+loadCards();
+</script>
+</body>
+</html>
