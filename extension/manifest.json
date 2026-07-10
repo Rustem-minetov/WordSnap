@@ -3,6 +3,12 @@
   "name": "WordSnap",
   "version": "1.1.0",
   "description": "Автоматическое создание карточек из любого текста. Замена Quizlet.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "wordsnap@rustem.minetov",
+      "strict_min_version": "109.0"
+    }
+  },
   "permissions": [
     "storage",
     "activeTab"
