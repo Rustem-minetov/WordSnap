@@ -1164,7 +1164,7 @@ function importData(event) {
 function resetAllData() {
   if (confirm('Внимание! Все ваши карточки, статистика и прогресс будут навсегда удалены. Вы действительно хотите сбросить все данные?')) {
     localStorage.clear();
-    state.cards = [...INITIAL_DEMO_CARDS];
+    state.cards = [];
     state.history = [...DEFAULT_HISTORY];
     state.settings = {
       deeplKey: "",

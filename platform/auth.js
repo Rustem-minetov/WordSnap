@@ -348,7 +348,7 @@
       originalSaveCardsToLocal(); // Saves to localStorage
       
       // Also push to Firestore if logged in
-      if (currentUser && state.cards && state.cards.length > 0) {
+      if (currentUser && state.cards) {
         db.collection('users').doc(currentUser.uid).collection('cardsData').doc('main').set({
           cards: JSON.stringify(state.cards),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
