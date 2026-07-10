@@ -49,7 +49,7 @@ function initApp() {
   if (localCards) {
     state.cards = JSON.parse(localCards);
   } else {
-    state.cards = [...INITIAL_DEMO_CARDS];
+    state.cards = [];
     saveCardsToLocal();
   }
 
@@ -197,7 +197,16 @@ function updateThemeUI() {
 function logout() {
   if (confirm('Вы действительно хотите выйти из аккаунта?')) {
     localStorage.removeItem('ws_user');
-    location.reload();
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      firebase.auth().signOut().then(() => {
+        location.reload();
+      }).catch(err => {
+        console.error('Logout error', err);
+        location.reload();
+      });
+    } else {
+      location.reload();
+    }
   }
 }
 
