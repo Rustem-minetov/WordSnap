@@ -60,7 +60,7 @@
         <button class="ws-close" id="ws-close-btn">✕</button>
       </div>
       <div class="ws-body">
-        <div class="ws-word">${escapeHtml(word)}</div>
+        <div class="ws-word"></div>
         <div class="ws-phonetic" id="ws-phonetic"></div>
         
         <!-- Шаг 1: Кнопка "Перевести" -->
@@ -95,6 +95,7 @@
     `;
 
     document.body.appendChild(bubble);
+    bubble.querySelector('.ws-word').textContent = word;
     positionBubble(x, y);
 
     // Кнопки
@@ -208,7 +209,12 @@
     if (!bubble) return;
     const loading = bubble.querySelector('#ws-loading');
     if (loading) {
-      loading.innerHTML = `<span style="font-size:12px; line-height:1.4">${msg}</span>`;
+      loading.textContent = '';
+      const span = document.createElement('span');
+      span.style.fontSize = '12px';
+      span.style.lineHeight = '1.4';
+      span.textContent = msg;
+      loading.appendChild(span);
       loading.style.flexDirection = 'column';
       loading.style.gap = '6px';
       loading.style.color = '#e74c3c';
