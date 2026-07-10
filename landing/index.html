@@ -60,23 +60,36 @@
       </div>
       <div class="hero-meta">
         <div class="hero-meta-item">
-          <div class="hero-meta-num">50K+</div>
+          <div class="hero-meta-num" id="real-user-count">...</div>
           <div class="hero-meta-label">Пользователей</div>
-        </div>
-        <div class="hero-meta-item">
-          <div class="hero-meta-num">30+</div>
-          <div class="hero-meta-label">Языков</div>
-        </div>
-        <div class="hero-meta-item">
-          <div class="hero-meta-num">4.8★</div>
-          <div class="hero-meta-label">Рейтинг</div>
-        </div>
-        <div class="hero-meta-item">
-          <div class="hero-meta-num">Free</div>
-          <div class="hero-meta-label">Начало</div>
         </div>
       </div>
     </div>
+
+    <!-- Firebase Scripts for User Count -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyASuAj0c9uLQygZRk1ePdigRGakgYPa9j0",
+        authDomain: "wordsnap-791f2.firebaseapp.com",
+        projectId: "wordsnap-791f2",
+        storageBucket: "wordsnap-791f2.firebasestorage.app",
+        messagingSenderId: "992172335798",
+        appId: "1:992172335798:web:4777c947927d430b967c17",
+        measurementId: "G-X57CKJ25B9"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      
+      // Fetch user count
+      db.collection('users').get().then(snap => {
+        document.getElementById('real-user-count').textContent = snap.size || 1;
+      }).catch(err => {
+        console.error("Error fetching user count:", err);
+        document.getElementById('real-user-count').textContent = "1";
+      });
+    </script>
 
     <div class="hero-visual">
       <!-- Floating badges -->
