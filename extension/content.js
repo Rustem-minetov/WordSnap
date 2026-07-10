@@ -62,20 +62,31 @@
       <div class="ws-body">
         <div class="ws-word">${escapeHtml(word)}</div>
         <div class="ws-phonetic" id="ws-phonetic"></div>
-        <div class="ws-divider"></div>
-        <div class="ws-loading" id="ws-loading">
+        
+        <!-- Шаг 1: Кнопка "Перевести" -->
+        <div id="ws-translate-step">
+          <button class="ws-btn-translate" id="ws-translate-btn">🔄 Перевести</button>
+        </div>
+
+        <!-- Шаг 2: Загрузка -->
+        <div class="ws-loading" id="ws-loading" style="display:none">
           <div class="ws-spinner"></div>
           Переводим...
         </div>
+
+        <!-- Шаг 3: Результат перевода + кнопка создания карточки -->
         <div id="ws-result" style="display:none">
+          <div class="ws-divider"></div>
           <div class="ws-translation" id="ws-trans"></div>
           <div class="ws-example" id="ws-example" style="display:none"></div>
           <div class="ws-actions">
-            <button class="ws-btn-save" id="ws-save-btn">+ Сохранить карточку</button>
+            <button class="ws-btn-save" id="ws-save-btn">+ Создать карточку</button>
             <button class="ws-btn-skip" id="ws-skip-btn">Пропустить</button>
           </div>
           <div class="ws-counter" id="ws-counter"></div>
         </div>
+
+        <!-- Шаг 4: Сохранено -->
         <div id="ws-saved" style="display:none">
           <div class="ws-saved-msg">✓ Карточка сохранена!</div>
           <div class="ws-counter" id="ws-saved-counter"></div>
@@ -88,11 +99,15 @@
 
     // Кнопки
     bubble.querySelector('#ws-close-btn').addEventListener('click', removeBubble);
-    bubble.querySelector('#ws-skip-btn').addEventListener('click', removeBubble);
-    bubble.querySelector('#ws-save-btn').addEventListener('click', saveCard);
-
-    // Получаем перевод
-    translateWord(word);
+    bubble.querySelector('#ws-translate-btn').addEventListener('click', () => {
+      // Скрываем кнопку перевести, показываем загрузку
+      const translateStep = bubble.querySelector('#ws-translate-step');
+      const loading = bubble.querySelector('#ws-loading');
+      if (translateStep) translateStep.style.display = 'none';
+      if (loading) loading.style.display = 'flex';
+      
+      translateWord(word);
+    });
   }
 
   // ─── Позиционируем пузырь умно ──────────────────────────────────
@@ -125,7 +140,7 @@
   }
 
   async function translateWord(word) {
-    console.log('WordSnap: Переводим через DeepL...', word);
+    console.log('WordSnap: Переводим через Lingva Translate...', word);
     
     chrome.runtime.sendMessage({ 
       type: 'TRANSLATE_WORD', 
@@ -143,12 +158,12 @@
         const context = getPageContext(word);
         showResult(word, {
           translation: translation,
-          ipa: '', // DeepL не дает транскрипцию
+          ipa: '',
           example: context || ''
         });
       } else {
-        console.error('DeepL Error:', response.error);
-        if (response.error.includes('403')) {
+        console.error('Lingva Translate Error:', response.error);
+        if (response.error && response.error.includes('403')) {
           showError('🔑 Ошибка 403: Лимит или неверный ключ.');
         } else {
           showError('⚠️ Ошибка сети. Проверьте VPN или ключ.');
@@ -179,6 +194,12 @@
         exEl.style.display = 'block';
       }
     }
+
+    // Привязываем кнопки после показа результата
+    const skipBtn = bubble.querySelector('#ws-skip-btn');
+    const saveBtn = bubble.querySelector('#ws-save-btn');
+    if (skipBtn) skipBtn.addEventListener('click', removeBubble);
+    if (saveBtn) saveBtn.addEventListener('click', saveCard);
 
     updateCounter();
   }
@@ -245,9 +266,12 @@
       cards.push(card);
       chrome.storage.local.set({ cards }, () => {
         showSaved(cards.length, false);
-        // [SYNC] Здесь можно добавить вызов API бэкенда для синхронизации с Firebase,
-        // если пользователь авторизован.
-        console.log('Синхронизация с облаком...');
+        
+        // Синхронизация с облаком
+        chrome.runtime.sendMessage({ 
+          type: 'SYNC_CARD_FIREBASE', 
+          card: card 
+        });
       });
     });
   }

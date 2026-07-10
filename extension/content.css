@@ -203,3 +203,27 @@
   font-weight: 500;
 }
 
+#wordsnap-bubble .ws-btn-translate {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: linear-gradient(135deg, #4A7FE8, #6B9BFF);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(74, 127, 232, 0.25);
+}
+
+#wordsnap-bubble .ws-btn-translate:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(74, 127, 232, 0.35);
+}
+
+#wordsnap-bubble .ws-btn-translate:active {
+  transform: translateY(0);
+}

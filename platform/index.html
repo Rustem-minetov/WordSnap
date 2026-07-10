@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WordSnap — IELTS & Vocabulary Planner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <!-- Add Firebase products that you want to use -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+
+  <div class="bg-wrap"></div>
+
+  <div class="app" id="app-container" style="display: none;">
+
+    <!-- NAV -->
+    <nav>
+      <div class="logo" onclick="switchTab('cards')" style="cursor:pointer">
+        <div class="logo-icon">
+          <svg viewBox="0 0 38 38" fill="none">
+            <rect x="6" y="10" width="20" height="22" rx="5" fill="#C8D9FF" opacity=".7" />
+            <rect x="12" y="6" width="20" height="22" rx="5" fill="#4A7FE8" />
+            <path d="M24 22 L29 18 L24 18 Z" fill="white" opacity=".9" />
+          </svg>
+        </div>
+        <span class="logo-name">Word<span>Snap</span></span>
+      </div>
+      <div class="nav-links">
+        <button class="nav-link active" data-tab="cards">Карточки</button>
+        <button class="nav-link" data-tab="study">Учёба</button>
+        <button class="nav-link" data-tab="stats">Статистика</button>
+        <button class="nav-link" data-tab="goals">Цели</button>
+        <button class="nav-link" data-tab="settings">Настройки</button>
+      </div>
+      <div></div>
+    </nav>
+
+    <!-- ─── TAB 1: CARDS ─── -->
+    <div id="cards-tab" class="tab-content active">
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-left">
+          <div class="hero-tag"><span class="dot"></span>Выделил — сохранил</div>
+          <h1>Учи языки через<br><em>реальный контент</em></h1>
+          <p class="hero-sub">Выдели слово в браузере — WordSnap мгновенно создаст карточку с переводом, примерами и
+            контекстом. Учи в любое время.</p>
+          <div class="hero-actions">
+            <button class="btn-primary" onclick="switchTab('study')">Начать учёбу</button>
+            <button class="btn-secondary" onclick="openAddCardModal()">Добавить вручную</button>
+          </div>
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="stat-num" id="total-cards-hero">0</div>
+              <div class="stat-lab">Карточек</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num" id="accuracy-hero">0%</div>
+              <div class="stat-lab">Точность</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num" id="streak-hero">0</div>
+              <div class="stat-lab">Дней подряд</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num" id="langs-hero">0</div>
+              <div class="stat-lab">Языков</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="snap-demo">
+          <div class="scan-frame">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+          </div>
+          <div class="card-stack">
+            <div class="stacked-card card-back2"></div>
+            <div class="stacked-card card-back1"></div>
+            <div class="stacked-card card-front">
+              <div class="card-lang">ENGLISH → РУССКИЙ</div>
+              <div class="card-word">Ephemeral</div>
+              <div class="card-phonetic">/ɪˈfem.ər.əl/</div>
+              <div class="card-divider"></div>
+              <div class="card-trans">Мимолётный</div>
+              <div class="card-example">"The ephemeral beauty of cherry blossoms..."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN GRID (SIDEBAR + CONTENT) -->
+      <div class="main-grid">
+        <div class="sidebar">
+          <div class="sidebar-section">
+            <div class="sec-title">Ваши папки</div>
+            <div id="folders-container">
+              <!-- Folders will be rendered here -->
+            </div>
+          </div>
+
+          <div class="sidebar-section">
+            <div class="sec-title">Цель на сегодня</div>
+            <div class="today-goal">
+              <div class="goal-ring">
+                <svg width="70" height="70">
+                  <circle cx="35" cy="35" r="30" fill="none" stroke="var(--blue-light)" stroke-width="6" />
+                  <circle id="goal-progress-circle" cx="35" cy="35" r="30" fill="none" stroke="var(--blue1)"
+                    stroke-width="6" stroke-dasharray="188.4" stroke-dashoffset="188.4" stroke-linecap="round"
+                    style="transition: stroke-dashoffset 0.5s ease;" />
+                </svg>
+                <div class="goal-ring-num" id="daily-goal-text">0/30</div>
+              </div>
+              <div>
+                <div class="goal-label">Дневной план</div>
+                <div class="goal-sub" id="daily-goal-sub">Осталось 30 слов</div>
+              </div>
+            </div>
+            <button class="session-btn" onclick="switchTab('study')">Начать сессию</button>
+          </div>
+        </div>
+
+        <div class="cards-area">
+          <div class="area-top">
+            <span class="area-title" id="current-folder-title">Все карточки</span>
+            <div class="filter-row">
+              <button class="filter-chip on" data-filter="all">Все</button>
+              <button class="filter-chip" data-filter="new">Новые</button>
+              <button class="filter-chip" data-filter="review">Повторять</button>
+              <button class="filter-chip" data-filter="learned">Выучены</button>
+            </div>
+          </div>
+          <div class="search-bar">
+            <span>🔍</span>
+            <input id="cards-search" placeholder="Поиск по словам...">
+          </div>
+          <div class="vocab-grid" id="cards-grid">
+            <!-- Dynamic cards list -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── TAB 2: STUDY ─── -->
+    <div id="study-tab" class="tab-content">
+      <!-- Selection Grid -->
+      <div id="study-selection">
+        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Выбери режим обучения</h2>
+        <p style="color: var(--text-mid); font-size: 14.5px; margin-bottom: 24px;">Тренировки повышают прочность памяти
+          и помогают подготовиться к IELTS.</p>
+
+        <div class="study-modes-grid">
+          <div class="study-mode-card" data-mode="quick">
+            <div class="smc-icon">⚡</div>
+            <div class="smc-title">Быстрый повтор</div>
+            <div class="smc-desc">Простая проверка памяти: смотрим на английское слово, пытаемся вспомнить перевод,
+              переворачиваем карточку.</div>
+            <span class="smc-badge">Активный</span>
+          </div>
+          <div class="study-mode-card" data-mode="spaced">
+            <div class="smc-icon">📅</div>
+            <div class="smc-title">Spaced Repetition</div>
+            <div class="smc-desc">Научное интервальное повторение. Алгоритм сам подбирает слова, которые пора обновить в
+              памяти прямо сейчас.</div>
+            <span class="smc-badge" id="spaced-badge-count">0 слов готово</span>
+          </div>
+          <div class="study-mode-card" data-mode="ielts">
+            <div class="smc-icon">🎓</div>
+            <div class="smc-title">IELTS Mode</div>
+            <div class="smc-desc">Эксклюзивный режим! Слова уровня B2-C2 из Academic Word List с примерами из
+              академических текстов.</div>
+            <span class="smc-badge">Academic WL</span>
+          </div>
+          <div class="study-mode-card" data-mode="context">
+            <div class="smc-icon">📖</div>
+            <div class="smc-title">Контекстный режим</div>
+            <div class="smc-desc">Интерактивный тест. Показывается реальное предложение с пропуском, угадай нужное по
+              смыслу слово.</div>
+            <span class="smc-badge">Слово по контексту</span>
+          </div>
+          <div class="study-mode-card" data-mode="audio">
+            <div class="smc-icon">🎧</div>
+            <div class="smc-title">Режим аудирования</div>
+            <div class="smc-desc">Восприятие на слух. Прослушай слово или целое предложение и напиши его по буквам.
+            </div>
+            <span class="smc-badge">Аудио + Ввод</span>
+          </div>
+          <div class="study-mode-card" data-mode="type">
+            <div class="smc-icon">✍️</div>
+            <div class="smc-title">Режим печати</div>
+            <div class="smc-desc">Максимальный фокус на правописание. Видишь перевод на русский, должен написать слово
+              на английском.</div>
+            <span class="smc-badge">Правописание</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active session screen -->
+      <div id="study-session" style="display: none;">
+        <button class="btn-secondary" style="margin-bottom: 20px; padding: 7px 15px;" onclick="exitSession()">← Назад к
+          режимам</button>
+
+        <div class="session-container">
+          <div class="session-header">
+            <div class="session-title-text" id="session-title-text">Режим обучения</div>
+            <div class="session-progress-text" id="session-progress-text">1 из 10</div>
+          </div>
+          <div class="session-progress-bar">
+            <div class="session-progress-fill" id="session-progress-fill"></div>
+          </div>
+
+          <div id="session-workspace">
+            <!-- Dynamic contents injection (card-box, buttons, input, audio buttons) -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── TAB 3: STATS ─── -->
+    <div id="stats-tab" class="tab-content">
+      <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Аналитика прогресса</h2>
+      <p style="color: var(--text-mid); font-size: 14.5px; margin-bottom: 24px;">Статистика твоей памяти и распределение
+        изученного.</p>
+
+      <div class="stats-summary">
+        <div class="stat-box">
+          <div class="stat-box-num" id="stat-total-cards">0</div>
+          <div class="stat-box-label">Всего карточек</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-num" id="stat-fully-learned">0</div>
+          <div class="stat-box-label">Выучено на 100%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-num" id="stat-in-progress">0</div>
+          <div class="stat-box-label">В процессе</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-num" id="stat-new">0</div>
+          <div class="stat-box-label">Новых</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stats-panel">
+          <h3 class="sec-title">Активность за неделю</h3>
+          <p style="font-size:12px;color:var(--text-soft)">Повторений слов по дням</p>
+          <div class="activity-chart" id="activity-chart">
+            <!-- 7 cols dynamic rendering -->
+          </div>
+        </div>
+        <div class="stats-panel">
+          <h3 class="sec-title">Слабые слова</h3>
+          <p style="font-size:12px;color:var(--text-soft)">Слова с наибольшим количеством ошибок</p>
+          <div class="weak-words-list" id="weak-words-container">
+            <!-- Weak words dynamic render -->
+          </div>
+          <button class="btn-primary" style="width: 100%; margin-top: 18px;" id="repeat-weak-btn">Повторить проблемные
+            слова</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── TAB 4: GOALS ─── -->
+    <div id="goals-tab" class="tab-content">
+      <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Цели и Достижения</h2>
+      <p style="color: var(--text-mid); font-size: 14.5px; margin-bottom: 24px;">Мотивация каждый день. Достигай целей,
+        чтобы удерживать серию!</p>
+
+      <div class="stats-panel" style="margin-bottom: 24px;">
+        <h3 class="sec-title">Твои цели</h3>
+        <div class="goals-hero">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+                <span style="font-size:14px; font-weight:700">Цель на сегодня</span>
+                <span style="font-size:14px; font-weight:700" id="goal-today-text">22 / 30 слов (73%)</span>
+              </div>
+              <div style="height:8px; background:var(--blue-light); border-radius:4px; overflow:hidden">
+                <div id="goal-today-bar"
+                  style="height:100%; background:linear-gradient(90deg, var(--blue1), var(--blue2)); width: 73%;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+                <span style="font-size:14px; font-weight:700">Недельная цель</span>
+                <span style="font-size:14px; font-weight:700" id="goal-week-text">125 / 200 повторений</span>
+              </div>
+              <div style="height:8px; background:var(--blue-light); border-radius:4px; overflow:hidden">
+                <div id="goal-week-bar"
+                  style="height:100%; background:linear-gradient(90deg, var(--blue1), var(--blue2)); width: 62.5%;">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            style="display:flex; align-items:center; justify-content:center; flex-direction:column; border-left:1px solid var(--blue-light); padding-left: 20px;">
+            <div style="font-size:42px">🔥</div>
+            <div style="font-size:24px; font-weight:800; color:var(--text-dark)" id="goal-streak-num">14</div>
+            <div
+              style="font-size:11px; font-weight:700; color:var(--text-soft); text-transform:uppercase; letter-spacing:0.5px">
+              дней подряд</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-panel">
+        <h3 class="sec-title">Достижения (Кубки)</h3>
+        <div class="achievements-grid" id="achievements-grid">
+          <!-- 4 achievements -->
+          <div class="ach-card" id="ach-100">
+            <div class="ach-icon">🏆</div>
+            <div>
+              <div class="ach-title">Первые 100 слов</div>
+              <div class="ach-desc">Накопите более 100 слов в своей коллекции.</div>
+            </div>
+          </div>
+          <div class="ach-card" id="ach-week">
+            <div class="ach-icon">🔥</div>
+            <div>
+              <div class="ach-title">Серия без пропусков</div>
+              <div class="ach-desc">Поддерживайте серию дней обучения больше 7 дней.</div>
+            </div>
+          </div>
+          <div class="ach-card" id="ach-1000">
+            <div class="ach-icon">🎖️</div>
+            <div>
+              <div class="ach-title">Гигант памяти</div>
+              <div class="ach-desc">Сделайте более 1000 успешных повторений слов.</div>
+            </div>
+          </div>
+          <div class="ach-card" id="ach-ielts">
+            <div class="ach-icon">🎓</div>
+            <div>
+              <div class="ach-title">IELTS Champion</div>
+              <div class="ach-desc">Пройдите IELTS сессию хотя бы один раз.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── TAB 5: SETTINGS ─── -->
+    <div id="settings-tab" class="tab-content">
+      <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Настройки</h2>
+      <p style="color: var(--text-mid); font-size: 14.5px; margin-bottom: 24px;">Конфигурация вашего аккаунта и
+        интерфейса.</p>
+
+      <div class="settings-panel">
+        <!-- Theme Setting -->
+        <div class="settings-group">
+          <label class="settings-label">Тема оформления</label>
+          <div style="display: flex; gap: 10px;">
+            <button class="filter-chip on" id="btn-theme-default" onclick="setTheme('default')">Стандартная</button>
+            <button class="filter-chip" id="btn-theme-bright" onclick="setTheme('bright')">Яркая</button>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <label class="settings-label">Дневной план (количество слов)</label>
+          <input type="number" id="settings-daily-goal" class="settings-input" value="30">
+        </div>
+
+        <div
+          style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--blue-light); display: flex; justify-content: space-between; align-items: center;">
+          <button class="btn-danger" onclick="resetAllData()">⚠️ Сбросить данные</button>
+          <button class="btn-secondary" id="web-logout-btn" onclick="logout()">Выйти из аккаунта</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL SELECT LANGUAGE FOR STUDY -->
+  <div class="modal-overlay" id="select-lang-modal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <div class="modal-header">
+        <div class="modal-title">Язык тренировки</div>
+        <button class="modal-close" onclick="closeSelectLangModal()">✕</button>
+      </div>
+      <p style="color: var(--text-mid); font-size: 14px; margin-bottom: 20px; text-align: center;">Выберите, какой язык
+        вы хотите изучать:</p>
+      <div id="select-lang-buttons" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+        <!-- Dynamic language buttons -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ADD WORD -->
+  <div class="modal-overlay" id="add-card-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Добавить новую карточку</div>
+        <button class="modal-close" id="modal-close-btn">✕</button>
+      </div>
+      <div>
+        <div class="settings-group">
+          <label class="settings-label">Слово или фраза (English)</label>
+          <input type="text" id="modal-word-input" class="settings-input" placeholder="Например: Ephemeral">
+        </div>
+        <div class="settings-row">
+          <div>
+            <label class="settings-label">Перевод (Русский)</label>
+            <input type="text" id="modal-trans-input" class="settings-input" placeholder="Например: Мимолётный">
+          </div>
+          <div>
+            <label class="settings-label">Фонетика</label>
+            <input type="text" id="modal-phonetic-input" class="settings-input" placeholder="Например: /ɪˈfem.ər.əl/">
+          </div>
+        </div>
+        <div class="settings-group">
+          <label class="settings-label">Контекст (Предложение)</label>
+          <input type="text" id="modal-context-input" class="settings-input"
+            placeholder="The ephemeral beauty of cherry blossoms...">
+        </div>
+        <div class="settings-row">
+          <div>
+            <label class="settings-label">Источник (Сайт / Книга)</label>
+            <input type="text" id="modal-source-input" class="settings-input" placeholder="Например: BBC News">
+          </div>
+          <div>
+            <label class="settings-label">Ссылка на оригинал</label>
+            <input type="text" id="modal-url-input" class="settings-input" placeholder="https://bbc.com/article">
+          </div>
+        </div>
+        <button class="btn-primary" style="width:100%; padding: 12px; font-size:15px; margin-top:10px;"
+          onclick="saveManualCard()">Создать карточку</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+
+  <!-- AUTH OVERLAY -->
+  <div id="auth-overlay" class="auth-overlay-premium">
+    <div class="auth-card-premium">
+      
+      <!-- Logo -->
+      <div class="auth-logo-area">
+        <div class="auth-logo-icon">
+          <svg viewBox="0 0 38 38" fill="none">
+            <rect x="12" y="6" width="20" height="22" rx="5" fill="#fff" />
+          </svg>
+        </div>
+        <div class="auth-logo-text">Word<span>Snap</span></div>
+      </div>
+
+      <!-- Login Form -->
+      <div id="login-form-area">
+        <h2>С возвращением</h2>
+        <p class="auth-subtitle">Войдите, чтобы синхронизировать слова<br>на всех ваших устройствах.</p>
+        
+        <div id="auth-error" class="auth-error-box"></div>
+
+        <button class="auth-btn-google" id="login-google-btn" onclick="firebaseGoogleLogin()">
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Продолжить с Google
+        </button>
+
+        <div class="auth-divider"><span>или по email</span></div>
+
+        <input type="email" id="login-email" class="auth-input-premium" placeholder="Ваш Email" autocomplete="email">
+        <input type="password" id="login-password" class="auth-input-premium" placeholder="Пароль" autocomplete="current-password">
+        
+        <button class="auth-btn-primary" id="login-submit-btn" onclick="firebaseLogin()">Войти в аккаунт</button>
+        
+        <div class="auth-footer">
+          <a href="#" onclick="showResetPassword()" style="font-size:13px;">Забыли пароль?</a>
+          <br><br>
+          Нет аккаунта? <a href="#" onclick="toggleAuthMode('register')">Создать сейчас</a>
+        </div>
+      </div>
+
+      <!-- Register Form -->
+      <div id="register-form-area" style="display: none;">
+        <h2>Начать работу</h2>
+        <p class="auth-subtitle">Присоединяйтесь к WordSnap<br>для эффективного обучения.</p>
+        
+        <div id="reg-error" class="auth-error-box"></div>
+
+        <button class="auth-btn-google" id="reg-google-btn" onclick="firebaseGoogleLogin()">
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Зарегистрироваться с Google
+        </button>
+
+        <div class="auth-divider"><span>или по email</span></div>
+
+        <input type="text" id="reg-name" class="auth-input-premium" placeholder="Ваше имя" autocomplete="name">
+        <input type="email" id="reg-email" class="auth-input-premium" placeholder="Email" autocomplete="email">
+        <input type="password" id="reg-password" class="auth-input-premium" placeholder="Придумайте пароль (мин. 6 символов)" autocomplete="new-password">
+        
+        <button class="auth-btn-primary" id="reg-submit-btn" onclick="firebaseRegister()">Создать аккаунт</button>
+        
+        <div class="auth-footer">
+          Уже есть аккаунт? <a href="#" onclick="toggleAuthMode('login')">Войти</a>
+        </div>
+      </div>
+
+      <!-- Reset Password Form -->
+      <div id="reset-form-area" style="display: none;">
+        <h2>Сброс пароля</h2>
+        <p class="auth-subtitle">Введите email, и мы отправим<br>ссылку для восстановления.</p>
+        
+        <div id="reset-error" class="auth-error-box"></div>
+        <div id="reset-success" class="auth-error-box" style="color:#16a34a; background:#f0fdf4; border-color:#bbf7d0;"></div>
+
+        <input type="email" id="reset-email" class="auth-input-premium" placeholder="Ваш Email" autocomplete="email">
+        
+        <button class="auth-btn-primary" id="reset-submit-btn" onclick="firebaseResetPassword()">Отправить ссылку</button>
+        
+        <div class="auth-footer">
+          <a href="#" onclick="toggleAuthMode('login')">← Вернуться ко входу</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+</body>
+
+</html>
