@@ -12,16 +12,8 @@ const IELTS_WORDS = [
   { word: "diligent", translation: "прилежный, исполнительный", phonetic: "/ˈdɪl.ɪ.dʒənt/", context: "The academic progress is a direct result of diligent work and research.", source: "Academic Weekly", url: "#", lang: "English" }
 ];
 
-// 7 days default history data
-const DEFAULT_HISTORY = [
-  { date: new Date(Date.now() - 6 * 24 * 3600000).toISOString().split('T')[0], count: 8 },
-  { date: new Date(Date.now() - 5 * 24 * 3600000).toISOString().split('T')[0], count: 15 },
-  { date: new Date(Date.now() - 4 * 24 * 3600000).toISOString().split('T')[0], count: 5 },
-  { date: new Date(Date.now() - 3 * 24 * 3600000).toISOString().split('T')[0], count: 22 },
-  { date: new Date(Date.now() - 2 * 24 * 3600000).toISOString().split('T')[0], count: 11 },
-  { date: new Date(Date.now() - 1 * 24 * 3600000).toISOString().split('T')[0], count: 29 },
-  { date: new Date().toISOString().split('T')[0], count: 22 } // Today
-];
+// Initial empty history
+const DEFAULT_HISTORY = [];
 
 // App State
 let state = {
@@ -33,7 +25,7 @@ let state = {
     targetLang: "English",
     theme: "default"
   },
-  streak: 14,
+  streak: 0,
   currentFolder: { lang: 'English', status: null }, // { lang, status }
   pendingStudyMode: null
 };
@@ -1172,7 +1164,7 @@ function resetAllData() {
       targetLang: "English",
       theme: "default"
     };
-    state.streak = 14;
+    state.streak = 0;
 
     saveCardsToLocal();
     saveHistoryToLocal();
