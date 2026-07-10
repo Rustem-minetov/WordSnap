@@ -326,4 +326,18 @@
     return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
+  // ─── Синхронизация авторизации (SSO) ────────────────────────────
+  window.addEventListener('message', (event) => {
+    // Ensure message is from the same window and matches our type
+    if (event.source !== window || !event.data || event.data.type !== 'WORDSNAP_SYNC_AUTH') return;
+    
+    chrome.runtime.sendMessage({
+      type: 'AUTH_EXTERNAL_LOGIN',
+      uid: event.data.uid,
+      email: event.data.email,
+      displayName: event.data.displayName,
+      refreshToken: event.data.refreshToken
+    });
+  });
+
 })();

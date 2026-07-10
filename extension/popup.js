@@ -326,3 +326,11 @@ function escHtml(text) {
 // ─── Init ────────────────────────────────────────────────────────
 loadCards();
 updateSyncTip();
+
+// ─── SSO Listeners ──────────────────────────────────────────────
+document.getElementById('sso-login-btn').addEventListener('click', () => {
+  chrome.tabs.create({ url: 'https://wordsnap-beta-production.up.railway.app/platform' });
+});
+document.getElementById('sso-register-btn').addEventListener('click', () => {
+  chrome.tabs.create({ url: 'https://wordsnap-beta-production.up.railway.app/platform' });
+});

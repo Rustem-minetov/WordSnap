@@ -339,6 +339,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ success: true });
     return false;
   }
+
+  // Auth: SSO from Web Platform
+  if (request.type === 'AUTH_EXTERNAL_LOGIN') {
+    if (request.refreshToken && request.uid) {
+      authState.uid = request.uid;
+      authState.email = request.email;
+      authState.displayName = request.displayName;
+      authState.refreshToken = request.refreshToken;
+      authState.expiresAt = 0; // Force immediate refresh
+      saveAuthState();
+      
+      // Attempt to get a valid token immediately
+      getValidToken().then(token => {
+        if (token) {
+          console.log('WordSnap: Successfully logged in via Web Platform SSO!');
+        }
+      });
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false, error: 'Invalid SSO payload' });
+    }
+    return true;
+  }
 });
 
 // ─── Translation via Google Translate Unofficial API ───────────────

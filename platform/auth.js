@@ -100,6 +100,15 @@
         currentUser = user;
         const overlay = document.getElementById('auth-overlay');
         const appContainer = document.getElementById('app-container');
+
+        // Broadcast auth info to the extension's content script
+        window.postMessage({
+          type: 'WORDSNAP_SYNC_AUTH',
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || '',
+          refreshToken: user.refreshToken || user.stsTokenManager?.refreshToken || ''
+        }, '*');
         
         overlay.style.opacity = '0';
         overlay.style.pointerEvents = 'none';
