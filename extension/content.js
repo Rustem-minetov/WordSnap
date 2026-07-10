@@ -92,7 +92,7 @@
           <div class="ws-counter" id="ws-saved-counter"></div>
         </div>
       </div>
-    `;
+    `);
 
     document.body.appendChild(bubble);
     bubble.querySelector('.ws-word').textContent = word;
