@@ -74,11 +74,17 @@ async function updateAccountUI() {
 async function updateSyncTip() {
   const status = await auth.getStatus();
   const tip = document.getElementById('sync-tip');
-  if (status.loggedIn) {
-    tip.innerHTML = '<strong>☁️ Синхронизация активна</strong> — карточки сохраняются в облако и на платформу.';
-  } else {
-    tip.innerHTML = '<strong>⚠️ Войдите в аккаунт</strong> (👤) чтобы карточки появлялись в WordSnap платформе.';
-  }
+    tip.textContent = '';
+    const strong = document.createElement('strong');
+    if (status.loggedIn) {
+      strong.textContent = '☁️ Синхронизация активна';
+      tip.appendChild(strong);
+      tip.appendChild(document.createTextNode(' — карточки сохраняются в облако и на платформу.'));
+    } else {
+      strong.textContent = '⚠️ Войдите в аккаунт';
+      tip.appendChild(strong);
+      tip.appendChild(document.createTextNode(' (👤) чтобы карточки появлялись в WordSnap платформе.'));
+    }
 }
 
 // ─── Login Handler ──────────────────────────────────────────────
@@ -168,27 +174,54 @@ function renderCards(cards) {
   stats.textContent = `${cards.length} карточек`;
 
   if (cards.length === 0) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">📚</div>
-        <div class="empty-text">Карточек пока нет.<br>Выдели слово на любом сайте!</div>
-      </div>
-    `;
+    list.textContent = '';
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    const emptyIcon = document.createElement('div');
+    emptyIcon.className = 'empty-icon';
+    emptyIcon.textContent = '📚';
+    const emptyText = document.createElement('div');
+    emptyText.className = 'empty-text';
+    emptyText.textContent = 'Карточек пока нет.';
+    emptyText.appendChild(document.createElement('br'));
+    emptyText.appendChild(document.createTextNode('Выдели слово на любом сайте!'));
+    emptyState.appendChild(emptyIcon);
+    emptyState.appendChild(emptyText);
+    list.appendChild(emptyState);
     return;
   }
 
   // Показываем последние 5
   const recent = cards.slice(-5).reverse();
-  list.innerHTML = recent.map(card => `
-    <div class="card-item">
-      <div>
-        <div class="card-word">${escHtml(card.word)}</div>
-        <div class="card-trans">${escHtml(card.translation)}</div>
-        <div class="card-source">с сайта ${escHtml(card.source)}</div>
-      </div>
-      <button class="card-del" data-id="${card.id}" title="Удалить">✕</button>
-    </div>
-  `).join('');
+  list.textContent = '';
+  recent.forEach(card => {
+    const item = document.createElement('div');
+    item.className = 'card-item';
+
+    const info = document.createElement('div');
+    const wordDiv = document.createElement('div');
+    wordDiv.className = 'card-word';
+    wordDiv.textContent = card.word;
+    const transDiv = document.createElement('div');
+    transDiv.className = 'card-trans';
+    transDiv.textContent = card.translation;
+    const sourceDiv = document.createElement('div');
+    sourceDiv.className = 'card-source';
+    sourceDiv.textContent = 'с сайта ' + card.source;
+    info.appendChild(wordDiv);
+    info.appendChild(transDiv);
+    info.appendChild(sourceDiv);
+
+    const btn = document.createElement('button');
+    btn.className = 'card-del';
+    btn.dataset.id = card.id;
+    btn.title = 'Удалить';
+    btn.textContent = '✕';
+
+    item.appendChild(info);
+    item.appendChild(btn);
+    list.appendChild(item);
+  });
 
   // Удаление
   list.querySelectorAll('.card-del').forEach(btn => {
@@ -247,10 +280,16 @@ document.getElementById('btn-forgot').addEventListener('click', () => nextCard(f
 
 function showStudyCard() {
   if (studyIndex >= studyCards.length) {
-    document.getElementById('study-card').innerHTML = `
-      <div class="study-word">🎉</div>
-      <div class="study-hint">Все карточки пройдены!</div>
-    `;
+    const studyCard = document.getElementById('study-card');
+    studyCard.textContent = '';
+    const wordDiv = document.createElement('div');
+    wordDiv.className = 'study-word';
+    wordDiv.textContent = '🎉';
+    const hintDiv = document.createElement('div');
+    hintDiv.className = 'study-hint';
+    hintDiv.textContent = 'Все карточки пройдены!';
+    studyCard.appendChild(wordDiv);
+    studyCard.appendChild(hintDiv);
     document.querySelector('.study-actions').style.display = 'none';
     return;
   }
@@ -280,9 +319,8 @@ function shuffle(arr) {
 }
 
 function escHtml(text) {
-  const d = document.createElement('div');
-  d.appendChild(document.createTextNode(text || ''));
-  return d.innerHTML;
+  // Unused now, keeping for compatibility
+  return text;
 }
 
 // ─── Init ────────────────────────────────────────────────────────

@@ -54,7 +54,7 @@
     bubble = document.createElement('div');
     bubble.id = 'wordsnap-bubble';
 
-    bubble.innerHTML = `
+    bubble.insertAdjacentHTML('beforeend', `
       <div class="ws-header">
         <span class="ws-logo">⚡ WordSnap</span>
         <button class="ws-close" id="ws-close-btn">✕</button>
@@ -322,9 +322,8 @@
 
   // ─── Защита от XSS ──────────────────────────────────────────────
   function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.appendChild(document.createTextNode(text));
-    return div.innerHTML;
+    if (!text) return '';
+    return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
 })();
