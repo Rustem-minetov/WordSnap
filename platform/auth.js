@@ -102,6 +102,7 @@
         const appContainer = document.getElementById('app-container');
         
         overlay.style.opacity = '0';
+        overlay.style.pointerEvents = 'none';
         setTimeout(() => {
           overlay.style.display = 'none';
           appContainer.style.display = 'block';
@@ -119,8 +120,11 @@
         appInitialized = false;
         const overlay = document.getElementById('auth-overlay');
         const appContainer = document.getElementById('app-container');
-        overlay.style.opacity = '1';
         overlay.style.display = 'flex';
+        // force reflow
+        void overlay.offsetWidth;
+        overlay.style.opacity = '1';
+        overlay.style.pointerEvents = 'auto';
         appContainer.style.display = 'none';
       }
     });
