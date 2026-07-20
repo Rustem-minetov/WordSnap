@@ -334,3 +334,52 @@ document.getElementById('sso-login-btn').addEventListener('click', () => {
 document.getElementById('sso-register-btn').addEventListener('click', () => {
   chrome.tabs.create({ url: 'https://word-snap-seven.vercel.app/platform/' });
 });
+
+// ─── Paste Link Code ────────────────────────────────────────────
+document.getElementById('show-paste-code').addEventListener('click', () => {
+  const area = document.getElementById('paste-code-area');
+  area.style.display = area.style.display === 'none' ? 'block' : 'none';
+});
+
+document.getElementById('paste-code-btn').addEventListener('click', () => {
+  const code = document.getElementById('paste-code-input').value.trim();
+  const errorEl = document.getElementById('paste-code-error');
+  
+  if (!code) {
+    errorEl.textContent = 'Вставьте код с платформы.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const json = decodeURIComponent(escape(atob(code)));
+    const data = JSON.parse(json);
+    
+    if (!data.refreshToken || !data.uid) {
+      throw new Error('Invalid code');
+    }
+
+    chrome.runtime.sendMessage({
+      type: 'AUTH_EXTERNAL_LOGIN',
+      uid: data.uid,
+      email: data.email,
+      displayName: data.displayName,
+      refreshToken: data.refreshToken
+    }, (response) => {
+      if (response && response.success) {
+        errorEl.style.display = 'none';
+        // Wait a moment for token refresh, then update UI
+        setTimeout(() => {
+          updateAccountUI();
+          updateSyncTip();
+        }, 1500);
+      } else {
+        errorEl.textContent = 'Ошибка привязки. Попробуйте сгенерировать новый код.';
+        errorEl.style.display = 'block';
+      }
+    });
+  } catch (e) {
+    errorEl.textContent = 'Неверный код. Скопируйте код заново с платформы.';
+    errorEl.style.display = 'block';
+  }
+});

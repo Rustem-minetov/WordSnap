@@ -365,9 +365,17 @@
           </div>
         </div>
 
-        <div class="settings-group">
-          <label class="settings-label">Дневной план (количество слов)</label>
-          <input type="number" id="settings-daily-goal" class="settings-input" value="30">
+        <div class="settings-group" style="margin-top: 20px; padding: 16px; background: linear-gradient(135deg, #EEF3FF, #E8EDFF); border-radius: 12px;">
+          <label class="settings-label" style="font-size: 15px;">🔗 Связать расширение</label>
+          <p style="font-size: 12.5px; color: var(--text-mid); margin-bottom: 12px;">Нажмите кнопку, скопируйте код и вставьте его в расширение WordSnap (👤 → «Вставить код»)</p>
+          <button class="btn-primary" id="generate-link-code-btn" onclick="generateLinkCode()" style="padding: 10px 20px;">Показать код привязки</button>
+          <div id="link-code-area" style="display: none; margin-top: 12px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="text" id="link-code-value" class="settings-input" readonly style="font-family: monospace; font-size: 13px; letter-spacing: 0.5px;">
+              <button class="btn-secondary" onclick="copyLinkCode()" style="white-space: nowrap; padding: 8px 14px;">📋 Копировать</button>
+            </div>
+            <p id="link-code-status" style="font-size: 11px; color: var(--text-soft); margin-top: 6px;">Код действителен пока вы на этой странице</p>
+          </div>
         </div>
 
         <div

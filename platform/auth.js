@@ -399,6 +399,40 @@
         });
     }
 
+    // ─── Extension Link Code ─────────────────────────────────────────
+    function generateLinkCode() {
+      if (!currentUser) {
+        alert('Сначала войдите в аккаунт!');
+        return;
+      }
+      const token = currentUser.refreshToken || '';
+      if (!token) {
+        alert('Ошибка: не удалось получить токен. Перезагрузите страницу.');
+        return;
+      }
+      const payload = JSON.stringify({
+        uid: currentUser.uid,
+        email: currentUser.email || '',
+        displayName: currentUser.displayName || '',
+        refreshToken: token
+      });
+      const code = btoa(unescape(encodeURIComponent(payload)));
+      document.getElementById('link-code-value').value = code;
+      document.getElementById('link-code-area').style.display = 'block';
+    }
+
+    function copyLinkCode() {
+      const input = document.getElementById('link-code-value');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        document.getElementById('link-code-status').textContent = '✅ Код скопирован! Вставьте его в расширение.';
+        document.getElementById('link-code-status').style.color = '#16a34a';
+      }).catch(() => {
+        document.execCommand('copy');
+        document.getElementById('link-code-status').textContent = '✅ Код скопирован!';
+      });
+    }
+
     // Background animation delay
     window.addEventListener('load', () => {
       document.body.classList.add('loaded');
