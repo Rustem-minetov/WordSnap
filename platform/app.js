@@ -187,18 +187,16 @@ function updateThemeUI() {
 }
 
 function logout() {
-  if (confirm('Вы действительно хотите выйти из аккаунта?')) {
-    localStorage.removeItem('ws_user');
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-      firebase.auth().signOut().then(() => {
-        location.reload();
-      }).catch(err => {
-        console.error('Logout error', err);
-        location.reload();
-      });
-    } else {
+  localStorage.removeItem('ws_user');
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    firebase.auth().signOut().then(() => {
       location.reload();
-    }
+    }).catch(err => {
+      console.error('Logout error', err);
+      location.reload();
+    });
+  } else {
+    location.reload();
   }
 }
 
