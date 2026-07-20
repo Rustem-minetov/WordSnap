@@ -426,8 +426,13 @@ function saveManualCard() {
     lang: state.settings.targetLang || "English"
   };
 
-  state.cards.push(newCard);
-  saveCardsToLocal();
+  try {
+    state.cards.push(newCard);
+    saveCardsToLocal();
+  } catch (e) {
+    alert("Ошибка при сохранении карточки: " + e.message);
+    return;
+  }
 
   // Reset inputs
   document.getElementById('modal-word-input').value = '';
