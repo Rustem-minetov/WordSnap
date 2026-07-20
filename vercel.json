@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/platform(.*)",
+      "destination": "/platform$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/landing/$1"
+    }
+  ]
+}
