@@ -277,6 +277,45 @@ async function syncCardToFirestore(card) {
   }
 }
 
+// ─── Bulk Card Sync (on login) ───────────────────────────────────
+async function bulkSyncLocalCards(localCards) {
+  try {
+    const token = await getValidToken();
+    if (!token || !authState.uid) return;
+
+    const path = `users/${authState.uid}/cardsData/main`;
+    
+    // Read existing
+    let existingCards = [];
+    try {
+      const doc = await firestoreRead(path);
+      if (doc && doc.fields && doc.fields.cards) {
+        existingCards = JSON.parse(doc.fields.cards.stringValue || '[]');
+      }
+    } catch (e) {}
+
+    // Merge logic
+    let changed = false;
+    localCards.forEach(localCard => {
+      const exists = existingCards.find(c => c.word && localCard.word && c.word.toLowerCase() === localCard.word.toLowerCase());
+      if (!exists) {
+        existingCards.push(localCard);
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      await firestoreWrite(path, {
+        cards: { stringValue: JSON.stringify(existingCards) },
+        updatedAt: { timestampValue: new Date().toISOString() }
+      });
+      console.log('WordSnap: Bulk sync completed ✓');
+    }
+  } catch (e) {
+    console.error('WordSnap: Bulk sync error:', e);
+  }
+}
+
 // ─── Message Handler ─────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // Translation
@@ -354,6 +393,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       getValidToken().then(token => {
         if (token) {
           console.log('WordSnap: Successfully logged in via Web Platform SSO!');
+          // Bulk sync any locally saved cards to the cloud
+          chrome.storage.local.get(['cards'], (result) => {
+            const localCards = result.cards || [];
+            if (localCards.length > 0) {
+              console.log(`WordSnap: Bulk syncing ${localCards.length} local cards to cloud...`);
+              bulkSyncLocalCards(localCards);
+            }
+          });
         }
       });
       sendResponse({ success: true });
