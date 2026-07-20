@@ -195,7 +195,7 @@ async function firestoreRead(path) {
   const token = await getValidToken();
   if (!token) return null;
 
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${path}`;
+  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${path}?key=${FIREBASE_API_KEY}`;
   const response = await fetch(url, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
@@ -213,7 +213,7 @@ async function firestoreWrite(path, fields) {
   const token = await getValidToken();
   if (!token) throw new Error('Not authenticated');
 
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${path}?updateMask.fieldPaths=cards&updateMask.fieldPaths=updatedAt`;
+  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${path}?updateMask.fieldPaths=cards&updateMask.fieldPaths=updatedAt&key=${FIREBASE_API_KEY}`;
   const response = await fetch(url, {
     method: 'PATCH',
     headers: {
