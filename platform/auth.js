@@ -374,6 +374,9 @@
           if (doc.exists) {
             try {
               const cloudCards = JSON.parse(doc.data().cards || '[]');
+              const debugEl = document.getElementById('debug-info-box');
+              if(debugEl) debugEl.textContent = 'RAW CLOUD CARDS: ' + (doc.data().cards || '[]');
+              
               if (cloudCards.length > 0) {
                 // Merge: combine local + cloud, dedup by word
                 const localCards = state.cards || [];

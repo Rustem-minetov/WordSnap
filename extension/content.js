@@ -296,6 +296,10 @@
         chrome.runtime.sendMessage({ 
           type: 'SYNC_CARD_FIREBASE', 
           cards: cards 
+        }, (response) => {
+          if (response && !response.success) {
+            alert('WordSnap Sync Error: ' + response.error);
+          }
         });
       });
     });

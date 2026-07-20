@@ -213,7 +213,7 @@ async function firestoreWrite(path, fields) {
   const token = await getValidToken();
   if (!token) throw new Error('Not authenticated');
 
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${path}`;
+  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${path}?updateMask.fieldPaths=cards&updateMask.fieldPaths=updatedAt`;
   const response = await fetch(url, {
     method: 'PATCH',
     headers: {
@@ -273,6 +273,7 @@ async function syncCardToFirestore(cardsToSync) {
     }
   } catch (e) {
     console.error('WordSnap: Ошибка синхронизации:', e);
+    throw e; // RETHROW so the content script gets success: false
   }
 }
 
