@@ -101,14 +101,19 @@
         const overlay = document.getElementById('auth-overlay');
         const appContainer = document.getElementById('app-container');
 
-        // Broadcast auth info to the extension's content script
-        window.postMessage({
-          type: 'WORDSNAP_SYNC_AUTH',
-          uid: user.uid,
-          email: user.email || '',
-          displayName: user.displayName || '',
-          refreshToken: user.refreshToken || user.stsTokenManager?.refreshToken || ''
-        }, '*');
+        const broadcastAuth = () => {
+          window.postMessage({
+            type: 'WORDSNAP_SYNC_AUTH',
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || '',
+            refreshToken: user.refreshToken || user.stsTokenManager?.refreshToken || ''
+          }, '*');
+        };
+        // Отправляем сразу и затем каждые 3 секунды для надежности (чтобы расширение точно поймало)
+        broadcastAuth();
+        if (window.syncAuthInterval) clearInterval(window.syncAuthInterval);
+        window.syncAuthInterval = setInterval(broadcastAuth, 3000);
         
         overlay.style.opacity = '0';
         overlay.style.pointerEvents = 'none';
