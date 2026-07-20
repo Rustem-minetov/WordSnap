@@ -143,23 +143,7 @@
       }
     });
 
-    // ─── Check for redirect result (for Google login fallback) ─────
-    auth.getRedirectResult().then(result => {
-      if (result.user) {
-        // Save user doc after redirect
-        db.collection('users').doc(result.user.uid).set({
-          name: result.user.displayName || '',
-          email: result.user.email || '',
-          photoURL: result.user.photoURL || '',
-          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-      }
-    }).catch(error => {
-      if (error.code && error.code !== 'auth/popup-closed-by-user') {
-        console.error('Redirect result error:', error);
-        showAuthError('auth-error', getFirebaseErrorMessage(error));
-      }
-    });
+    // Redirect-based login removed (causes 'missing initial state' in Firefox/partitioned storage)
 
     // ─── Toggle Login / Register / Reset ──────────────────────────────
     function toggleAuthMode(mode) {
@@ -269,7 +253,7 @@
         });
     }
 
-    // ─── Google Login (with redirect fallback) ───────────────────────
+    // ─── Google Login (popup only, no redirect) ──────────────────────
     function firebaseGoogleLogin() {
       const provider = new firebase.auth.GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
@@ -278,7 +262,6 @@
       setButtonLoading('login-google-btn', true);
       setButtonLoading('reg-google-btn', true);
 
-      // Try popup first, fallback to redirect
       auth.signInWithPopup(provider)
         .then(cred => {
           // Save/update user doc
@@ -290,15 +273,12 @@
           }, { merge: true });
         })
         .catch(error => {
-          // If popup was blocked or failed, try redirect
-          if (error.code === 'auth/popup-blocked' || 
-              error.code === 'auth/popup-closed-by-user' ||
-              error.code === 'auth/cancelled-popup-request') {
-            console.log('Popup failed, falling back to redirect...');
-            return auth.signInWithRedirect(provider);
+          if (error.code === 'auth/popup-blocked') {
+            showAuthError('auth-error', 'Браузер заблокировал окно авторизации. Разрешите всплывающие окна для этого сайта и попробуйте снова.');
+          } else if (error.code !== 'auth/popup-closed-by-user' && 
+                     error.code !== 'auth/cancelled-popup-request') {
+            showAuthError('auth-error', getFirebaseErrorMessage(error));
           }
-          // Show error for other issues
-          showAuthError('auth-error', getFirebaseErrorMessage(error));
         })
         .finally(() => {
           setButtonLoading('login-google-btn', false, 'Продолжить с Google');
