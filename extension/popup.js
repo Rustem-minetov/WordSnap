@@ -329,8 +329,8 @@ updateSyncTip();
 
 // ─── SSO Listeners ──────────────────────────────────────────────
 document.getElementById('sso-login-btn').addEventListener('click', () => {
-  chrome.tabs.create({ url: 'https://wordsnap-beta-production.up.railway.app/platform' });
+  chrome.tabs.create({ url: 'https://word-snap-seven.vercel.app/platform/' });
 });
 document.getElementById('sso-register-btn').addEventListener('click', () => {
-  chrome.tabs.create({ url: 'https://wordsnap-beta-production.up.railway.app/platform' });
+  chrome.tabs.create({ url: 'https://word-snap-seven.vercel.app/platform/' });
 });

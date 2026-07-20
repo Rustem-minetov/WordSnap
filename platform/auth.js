@@ -101,16 +101,29 @@
         const overlay = document.getElementById('auth-overlay');
         const appContainer = document.getElementById('app-container');
 
-        const broadcastAuth = () => {
-          window.postMessage({
-            type: 'WORDSNAP_SYNC_AUTH',
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName || '',
-            refreshToken: user.refreshToken || user.stsTokenManager?.refreshToken || ''
-          }, '*');
+        // Broadcast auth info to the extension's content script
+        // Method 1: window.postMessage
+        const authPayload = {
+          type: 'WORDSNAP_SYNC_AUTH',
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || '',
+          refreshToken: user.refreshToken || user.stsTokenManager?.refreshToken || ''
         };
-        // Отправляем сразу и затем каждые 3 секунды для надежности (чтобы расширение точно поймало)
+        
+        const broadcastAuth = () => {
+          window.postMessage(authPayload, '*');
+          // Method 2: Hidden DOM element (fallback for Firefox)
+          let el = document.getElementById('ws-auth-data');
+          if (!el) {
+            el = document.createElement('div');
+            el.id = 'ws-auth-data';
+            el.style.display = 'none';
+            document.body.appendChild(el);
+          }
+          el.dataset.payload = JSON.stringify(authPayload);
+          el.dataset.ts = Date.now();
+        };
         broadcastAuth();
         if (window.syncAuthInterval) clearInterval(window.syncAuthInterval);
         window.syncAuthInterval = setInterval(broadcastAuth, 3000);
