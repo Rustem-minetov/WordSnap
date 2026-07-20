@@ -292,10 +292,10 @@
       chrome.storage.local.set({ cards }, () => {
         showSaved(cards.length, false);
         
-        // Синхронизация с облаком
+        // Синхронизация с облаком (отправляем ВСЕ карточки для надежности)
         chrome.runtime.sendMessage({ 
           type: 'SYNC_CARD_FIREBASE', 
-          card: card 
+          cards: cards 
         });
       });
     });

@@ -232,7 +232,7 @@ async function firestoreWrite(path, fields) {
 }
 
 // ─── Card Sync (correct format matching web app) ─────────────────
-async function syncCardToFirestore(card) {
+async function syncCardToFirestore(cardsToSync) {
   try {
     const token = await getValidToken();
     if (!token || !authState.uid) {
@@ -253,25 +253,24 @@ async function syncCardToFirestore(card) {
       console.warn('WordSnap: Could not read existing cards, creating new document');
     }
 
-    // 2. Check for duplicates
-    const duplicate = existingCards.find(c =>
-      c.word && card.word && c.word.toLowerCase() === card.word.toLowerCase()
-    );
-    if (duplicate) {
-      console.log('WordSnap: Карточка уже есть в облаке');
-      return;
-    }
-
-    // 3. Add new card
-    existingCards.push(card);
-
-    // 4. Write back in the SAME format as the web app
-    await firestoreWrite(path, {
-      cards: { stringValue: JSON.stringify(existingCards) },
-      updatedAt: { timestampValue: new Date().toISOString() }
+    // 2. Merge logic (same as bulk sync)
+    let changed = false;
+    cardsToSync.forEach(localCard => {
+      const exists = existingCards.find(c => c.word && localCard.word && c.word.toLowerCase() === localCard.word.toLowerCase());
+      if (!exists) {
+        existingCards.push(localCard);
+        changed = true;
+      }
     });
 
-    console.log('WordSnap: Карточка синхронизирована ✓');
+    // 3. Write back in the SAME format as the web app
+    if (changed) {
+      await firestoreWrite(path, {
+        cards: { stringValue: JSON.stringify(existingCards) },
+        updatedAt: { timestampValue: new Date().toISOString() }
+      });
+      console.log('WordSnap: Карточки успешно синхронизированы ✓');
+    }
   } catch (e) {
     console.error('WordSnap: Ошибка синхронизации:', e);
   }
@@ -331,7 +330,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   // Card sync to Firestore
   if (request.type === 'SYNC_CARD_FIREBASE') {
-    syncCardToFirestore(request.card)
+    syncCardToFirestore(request.cards || [])
       .then(() => sendResponse({ success: true }))
       .catch(err => sendResponse({ success: false, error: err.message }));
     return true;
