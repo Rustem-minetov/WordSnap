@@ -363,7 +363,10 @@
         db.collection('users').doc(currentUser.uid).collection('cardsData').doc('main').set({
           cards: JSON.stringify(state.cards),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(err => console.error('Error saving to Firestore:', err));
+        }).catch(err => {
+          console.error('Error saving to Firestore:', err);
+          alert('Ошибка при сохранении в облако: ' + err.message);
+        });
       }
     };
 
